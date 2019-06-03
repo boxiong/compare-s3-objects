@@ -1,22 +1,40 @@
-name := "SkygateSparkApps"
+lazy val commonSettings = Seq(
+  name := "SkygateSparkApps",
+  version := "1.0",
+  scalaVersion := "2.11.12",
+  test in assembly := {}
+)
 
-version := "1.0"
-
-scalaVersion := "2.11.8"
-
-val sparkVersion = "2.3.0"
+lazy val root = (project in file(".")).
+  settings(commonSettings: _*).
+  settings(
+    // mainClass in assembly := Some("org.skygate.falcon.S3Differ.Main")
+  )
 
 resolvers ++= Seq(
   "apache-snapshots" at "http://repository.apache.org/snapshots/"
 )
 
+val sparkVersion = "2.3.0"
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % sparkVersion,
-  "org.apache.spark" %% "spark-sql" % sparkVersion,
-  "org.apache.spark" %% "spark-mllib" % sparkVersion,
-  "org.apache.spark" %% "spark-streaming" % sparkVersion,
-  "org.apache.spark" %% "spark-hive" % sparkVersion,
+  "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
+  "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
+  "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided",
+  "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",
+  "org.apache.spark" %% "spark-hive" % sparkVersion % "provided",
+  "com.amazonaws" % "aws-java-sdk" % "1.11.563" % "provided",
   "org.rogach" %% "scallop" % "3.3.0",
-  "mysql" % "mysql-connector-java" % "5.1.6",
-  "com.amazonaws" % "aws-java-sdk" % "1.11.563"
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+  "mysql" % "mysql-connector-java" % "5.1.6"
+)
+
+assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
+
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case other => MergeStrategy.defaultMergeStrategy(other)
+}
+
+assemblyShadeRules in assembly := Seq(
+  ShadeRule.rename("com.mysql.**" -> "shaded.@0").inAll
 )
