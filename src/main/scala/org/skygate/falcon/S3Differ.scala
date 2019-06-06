@@ -16,7 +16,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val publicKey = opt[String](required = true)
   val privateKey = opt[String](required = true)
   val materialSet = opt[String](required = true)
-  val materialSerial = opt[Int](default = Some(1))
+  val materialSerial = opt[Long](default = Some(1))
   val region = opt[String](default = Some("us-east-1"))
 
   val baselineManifestKey = opt[String](required = true)
@@ -28,6 +28,14 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
 }
 
 object S3Differ extends LazyLogging {
+
+  implicit class Helpers(rows: Dataset[Row]) {
+    def flatten(): Dataset[Row] = {
+      val cols = flattenSchema(rows.schema)
+      val aliases = cols.zipWithIndex.map(tuple => tuple._1.alias(tuple._1.toString.split("\\.").last + "_" + tuple._2))
+      rows.select(aliases: _*)
+    }
+  }
 
   def flattenSchema(schema: StructType, prefix: String = null) : Array[Column] = {
     schema.fields.flatMap(f => {
@@ -96,7 +104,7 @@ object S3Differ extends LazyLogging {
     val conf = new Conf(args)
     val diff = process(conf, spark)
     logger.info(s"diff.count = ${diff.count}")
-    diff.select(flattenSchema(diff.schema) : _*).show(conf.diffsToShow())
+    diff.flatten.show(conf.diffsToShow())
   }
 
 }
