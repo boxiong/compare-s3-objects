@@ -25,7 +25,10 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-java-sdk" % "1.11.563" % "provided",
   "org.rogach" %% "scallop" % "3.3.0",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-  "mysql" % "mysql-connector-java" % "5.1.6"
+  "mysql" % "mysql-connector-java" % "5.1.6",
+  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-csv" % "2.9.0",
+  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.0",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.0"
 )
 
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
@@ -36,5 +39,6 @@ assemblyMergeStrategy in assembly := {
 }
 
 assemblyShadeRules in assembly := Seq(
-  ShadeRule.rename("com.mysql.**" -> "shaded.@0").inAll
+  ShadeRule.rename("com.mysql.**" -> "shaded.@0").inAll,
+  ShadeRule.rename("com.fasterxml.jackson.**" -> "shaded.@0").inAll
 )
