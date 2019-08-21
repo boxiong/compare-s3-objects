@@ -12,12 +12,10 @@ import java.util.List;
 /**
  * This InventoryReportLineMapper class maps the inventory report into InventoryReportLine POJOs
  */
-public class InventoryReportLineMapper implements Serializable {
+public class InventoryReportLinesMapper implements Serializable {
     private CsvSchema schema;
 
-
-    public InventoryReportLineMapper(InventoryManifest inventoryManifest)
-            throws Exception{
+    public InventoryReportLinesMapper(InventoryManifest inventoryManifest) throws Exception {
         this.schema = CsvSchemaFactory.buildSchema(inventoryManifest);
     }
 
@@ -26,15 +24,16 @@ public class InventoryReportLineMapper implements Serializable {
      * @return List<InventoryReportLine> which is a list of POJOs
      * @throws IOException when mapping with schema fails
      */
-    public List<InventoryReportLine> mapInventoryReportLine(List<String> inventoryReportLine) throws IOException{
+    public List<InventoryReportLine> mapInventoryReportLines(List<String> lines) throws IOException {
         CsvMapper mapper = new CsvMapper();
         List<InventoryReportLine> inventoryReportLines = new ArrayList();
 
-        for (String eachLine : inventoryReportLine) {
-            MappingIterator<InventoryReportLine> iterator =
-                    mapper.readerFor(InventoryReportLine.class).with(schema).readValues(eachLine);
-            List<InventoryReportLine> rowValue = iterator.readAll();
-            inventoryReportLines.add(rowValue.get(0));
+        for (String line : lines) {
+            MappingIterator<InventoryReportLine> iterator = mapper.readerFor(InventoryReportLine.class).with(schema).readValues(line);
+            List<InventoryReportLine> rows = iterator.readAll();
+            if (rows.size() > 0) {
+                inventoryReportLines.add(rows.get(0));
+            }
         }
         return inventoryReportLines;
     }

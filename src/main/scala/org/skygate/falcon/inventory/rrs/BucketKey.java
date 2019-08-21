@@ -13,7 +13,7 @@ public class BucketKey {
     private final String destBucket;
     private final String destPrefix;
 
-    public BucketKey(String inputFilePath, String outputFilePath){
+    public BucketKey(String inputFilePath, String outputFilePath) {
         AmazonS3URI srcURI = new AmazonS3URI(inputFilePath);
         AmazonS3URI destURI = new AmazonS3URI(outputFilePath);
         this.srcBucket = srcURI.getBucket();

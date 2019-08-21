@@ -16,9 +16,8 @@ public class InventoryReportMapper implements FlatMapFunction<List<String>, Inve
     }
 
     @Override
-    public Iterator<InventoryReportLine> call(List<String> inventoryReportLine) throws Exception{
-        InventoryReportLineMapper mapper =
-                new InventoryReportLineMapper(manifest);
-        return mapper.mapInventoryReportLine(inventoryReportLine).iterator();
+    public Iterator<InventoryReportLine> call(List<String> lines) throws Exception {
+        InventoryReportLinesMapper mapper = new InventoryReportLinesMapper(manifest);
+        return mapper.mapInventoryReportLines(lines).iterator();
     }
 }

@@ -29,6 +29,11 @@ public class InventoryManifest implements Serializable {
     private String version;
 
     /**
+     * The creationTimestamp of the inventory list.
+     */
+    private String creationTimestamp;
+
+    /**
      * The format of the inventory file.
      */
     private String fileFormat;
@@ -79,16 +84,22 @@ public class InventoryManifest implements Serializable {
         this.sourceBucket = sourceBucket;
     }
 
-    public String getDestinationBucket() {return destinationBucket;}
+    public String getDestinationBucket() { return destinationBucket; }
 
     public void setDestinationBucket(String destinationBucket) {
         this.destinationBucket = destinationBucket;
     }
 
-    public String getVersion() {return version;}
+    public String getVersion() { return version; }
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public String getCreationTimestamp() { return creationTimestamp; }
+
+    public void setCreationTimestamp(String version) {
+        this.creationTimestamp = creationTimestamp;
     }
 
     @Override
@@ -107,6 +118,7 @@ public class InventoryManifest implements Serializable {
                 "sourceBucket: " + sourceBucket + ", \n" +
                 "destinationBucket: " + destinationBucket + ", \n" +
                 "version: " + version + ", \n" +
+                "creationTimestamp: " + creationTimestamp + ", \n" +
                 "fileFormat: " + fileFormat + ", \n" +
                 "fileSchema: " + fileSchema + ", \n" +
                 "locators: " + locators.toString() + "\n" +

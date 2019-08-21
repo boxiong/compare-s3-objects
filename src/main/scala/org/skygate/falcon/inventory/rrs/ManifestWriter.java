@@ -25,7 +25,7 @@ public class ManifestWriter {
     private String checksumKey;
 
     public ManifestWriter(AmazonS3 client, String destBucketName, String destPrefix, String srcBucket,
-                          InventoryManifest originalManifest){
+                          InventoryManifest originalManifest) {
         this.s3Client = client;
         this.bucketName = destBucketName;
         String time = this.getTime();
@@ -38,7 +38,7 @@ public class ManifestWriter {
      * Write manifest.json and manifest.checksum to S3
      * @throws IOException thrown when IOUtils.toInputStream fails or ObjectMapper.write() fails
      */
-    public void writeManifest(List<InventoryManifest.Locator> locatorList) throws IOException{
+    public void writeManifest(List<InventoryManifest.Locator> locatorList) throws IOException {
         InventoryManifest manifest = new InventoryManifest();
         manifest.setSourceBucket(originalManifest.getSourceBucket());
         manifest.setDestinationBucket(originalManifest.getDestinationBucket());
@@ -73,7 +73,7 @@ public class ManifestWriter {
      * A helper function which gets the local time
      * @return String in "yyyy-MM-dd'T'HH-mm'Z'" format
      */
-    private String getTime(){
+    private String getTime() {
         Date now = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH-mm'Z'");
         sdf.setTimeZone(TimeZone.getTimeZone("GTM"));

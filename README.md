@@ -223,3 +223,92 @@ diff.count
 z.show(diff.flatten.limit(3))
 ```
 
+=== Find out the size of objects per prefix (similar to du for POSIX) ===
+
+```
+spark-shell \
+    --master yarn \
+    --deploy-mode client \
+    --driver-memory 30G \
+    --executor-memory 30G --executor-cores 4 --num-executors 120 \
+    --conf spark.driver.maxResultSize=20g \
+    --driver-java-options='-Dspark.yarn.app.container.log.dir=/mnt/var/log/hadoop' \
+    --jars s3://bx.fenix.gamma/jars/S3Inventory-1.0.jar
+
+
+val srcBucketName = "???"
+val scrBucketKey = "???"
+val destBucketName = "???"
+val destPrefix = "output/temp"
+
+import org.skygate.falcon.inventory.rrs._;
+
+val s3Client = new CachedS3ClientFactory().get();
+val inventoryManifestRetriever = new InventoryManifestRetriever(s3Client, srcBucketName, scrBucketKey);
+val manifest = inventoryManifestRetriever.getInventoryManifest();
+val fileSchema = manifest.getFileSchema();
+
+
+import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.api.java.JavaSparkContext;
+
+val javaSC = new JavaSparkContext(sc);
+val clientFactory = javaSC.broadcast(new CachedS3ClientFactory());
+val locatorRDD = javaSC.parallelize(manifest.getLocators()).repartition(960);
+val linesRDD = locatorRDD.map(new InventoryReportLineRetriever(clientFactory, manifest));
+val pojoRDD = linesRDD.flatMap(new InventoryReportMapper(manifest));
+
+
+import spark.implicits._
+import org.apache.spark.sql.{Encoder, Encoders, types}
+
+val encoder = Encoders.bean(classOf[InventoryReportLine])
+val schema = encoder.schema
+schema.printTreeString
+val rawDataset = spark.createDataset(pojoRDD)(encoder)
+
+val dataset = rawDataset.withColumn("size", $"size".cast(types.IntegerType)).withColumn("levels", split($"key", "\\/")).select($"levels".getItem(0).as("level1"), $"levels".getItem(1).as("level2"), $"size", size($"levels").alias("level_depth")).cache
+dataset.printSchema
+
+import org.apache.spark.sql.functions._
+
+
+val level1Agg = dataset.groupBy("level1").agg(count(lit(1)).alias("num_of_objs"), sum("size").alias("total_size")).orderBy($"total_size".desc).cache
+level1Agg.withColumn("num_of_objs", format_number($"num_of_objs", 0)).withColumn("total_size", format_number($"total_size", 0)).show(50, 100)
+
+
+val level2Agg = dataset.filter($"level_depth" > lit(1)).groupBy("level1", "level2").agg(count(lit(1)).alias("num_of_objs"), sum("size").alias("total_size")).orderBy($"total_size".desc).cache
+level2Agg.withColumn("num_of_objs", format_number($"num_of_objs", 0)).withColumn("total_size", format_number($"total_size", 0)).show(50, 100)
+level2Agg.write.format("parquet").save("/bx/Level2Agg.parquet")
+
+
+val zeppelinData = spark.read.load("/bx/Level2Agg.parquet")
+val zeppelinView = zeppelinData.select(concat($"level1", lit("/"), $"level2"), $"total_size")
+
+import scala.util.Try
+val sizes = zeppelinData.select($"total_size").take(1000).map(r => r.get(0)).toSeq
+val sizesInLong = sizes.map(s => Try(s.asInstanceOf[Number].longValue).getOrElse(0L).asInstanceOf[Long]).sorted(Ordering[Long].reverse).zipWithIndex
+val histogram = sc.parallelize(sizesInLong).toDF("size", "index").select($"index" + 1 as "index", $"size").orderBy($"size".desc)
+z.show(histogram)
+
+
+
+val tags = Set(
+  "retail-attributed-events",
+  "preprocessed-pda-ranking-events",
+  "preprocessed-pda-click-events",
+  "pda-preprocessed-view-events",
+  "obsidian-impression-ces-hourly",
+  "fenix-click-ces-hourly",
+  "al-poppin-preprocessed-imp-events",
+  "al-poppin-preprocessed-click-events"
+)
+import org.apache.spark.broadcast.Broadcast
+def udf_check(tags: Broadcast[scala.collection.immutable.Set[String]]) = {
+  udf {(s: String) => tags.value.exists(s.contains(_))}
+}
+val checked_result = zeppelinData.withColumn("tag_check", udf_check(sc.broadcast(tags))($"level2"))
+val matchedTags = checked_result.filter($"tag_check" === true).orderBy($"level1", $"level2", $"total_size".desc)
+matchedTags.withColumn("num_of_objs", format_number($"num_of_objs", 0)).withColumn("total_size", format_number($"total_size", 0)).show(50, 100)
+```
+

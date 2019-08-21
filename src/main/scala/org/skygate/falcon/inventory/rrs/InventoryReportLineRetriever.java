@@ -22,8 +22,7 @@ public class InventoryReportLineRetriever implements Function<InventoryManifest.
 
     @Override
     public List<String> call(InventoryManifest.Locator locator) throws IOException {
-        InventoryReportRetriever reportRetriever =
-                new InventoryReportRetriever(s3ClientFactory.getValue().get(), locator, manifestStorage);
+        InventoryReportRetriever reportRetriever = new InventoryReportRetriever(s3ClientFactory.getValue().get(), locator, manifestStorage);
         return Arrays.asList(reportRetriever.getInventoryReportToString().split("\n"));
     }
 }

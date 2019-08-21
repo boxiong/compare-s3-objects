@@ -14,16 +14,16 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * This ReducedRedundancyLocatorExampleMain class writes new filtered inventory report and its manifest files,
+ * This ReducedRedundancyLocatorMain class writes new filtered inventory report and its manifest files,
  * and send them to the S3 bucket specified by the args.
  */
-public class ReducedRedundancyLocatorExampleMain {
-    private static final Logger LOG = LoggerFactory.getLogger(ReducedRedundancyLocatorExampleMain.class);
+public class ReducedRedundancyLocatorMain {
+    private static final Logger LOG = LoggerFactory.getLogger(ReducedRedundancyLocatorMain.class);
     private static final String PARSE_ERROR_MSG = "usage: parse args\n" +
             " -i <s3://source-bucket/YYYY-MM-DDTHH-MMZ> \n"
             + " -o <s3://destination-bucket/output-prefix> \n";
 
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
         String srcBucketName;
         String scrBucketKey;
         String destBucketName;

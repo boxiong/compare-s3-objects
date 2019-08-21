@@ -18,16 +18,16 @@ import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * This InventoryReportLineWriter class writes InventoryReportLine objects to a new CSV file
+ * This InventoryReportLinesWriter class writes InventoryReportLine objects to a new CSV file
  * and sends it to the S3 bucket
  */
-public class InventoryReportLineWriter implements Serializable {
+public class InventoryReportLinesWriter implements Serializable {
     private final AmazonS3 s3Client;
     private final String bucketName;
     private String outputInventoryReportKey;
     private CsvSchema schema;
 
-    public InventoryReportLineWriter(AmazonS3 client, String destBucketName, String destPrefix,
+    public InventoryReportLinesWriter(AmazonS3 client, String destBucketName, String destPrefix,
                                      String srcBucket, InventoryManifest inventoryManifest) throws IOException{
         this.s3Client = client;
         this.bucketName = destBucketName;
@@ -41,12 +41,12 @@ public class InventoryReportLineWriter implements Serializable {
      * @return Locator which includes the information of this new report
      * @throws IOException thrown when GZIPOutputStream not created successfully or csvMapper.write() fails
      */
-    public InventoryManifest.Locator writeCsvFile(List<InventoryReportLine> inventoryReportLine) throws IOException{
+    public InventoryManifest.Locator writeCsvFile(List<InventoryReportLine> inventoryReportLines) throws IOException {
         CsvMapper csvMapper = new CsvMapper();
         csvMapper.enable(JsonGenerator.Feature.IGNORE_UNKNOWN);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
-        csvMapper.writer(schema).writeValues(gzipOutputStream).writeAll(inventoryReportLine).close();
+        csvMapper.writer(schema).writeValues(gzipOutputStream).writeAll(inventoryReportLines).close();
         byte[] zipByteArray = byteArrayOutputStream.toByteArray();
 
         InputStream zipInputStream = new ByteArrayInputStream(zipByteArray);
@@ -63,7 +63,7 @@ public class InventoryReportLineWriter implements Serializable {
      * @param outputInventoryBytes which is byte array
      * @return Locator which includes the information of the CSV file
      */
-    private InventoryManifest.Locator buildLocator(byte[] outputInventoryBytes){
+    private InventoryManifest.Locator buildLocator(byte[] outputInventoryBytes) {
         InventoryManifest.Locator locator = new InventoryManifest.Locator();
         locator.setKey(outputInventoryReportKey);
         locator.setSize(outputInventoryBytes.length);

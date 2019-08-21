@@ -36,9 +36,9 @@ public class WriteNewInventoryReportFunc implements
         if (!inventoryReport.hasNext()){
             return Collections.emptyIterator();
         }
-        List<InventoryReportLine> inventoryReportLineList = IteratorUtils.toList(inventoryReport);
-        InventoryReportLineWriter scvWriter = new InventoryReportLineWriter(s3ClientFactory.getValue().get(),
+        List<InventoryReportLine> inventoryReportLines = IteratorUtils.toList(inventoryReport);
+        InventoryReportLinesWriter writer = new InventoryReportLinesWriter(s3ClientFactory.getValue().get(),
                 destBucket, destPrefix, srcBucket, manifestStorage);
-        return Collections.singletonList(scvWriter.writeCsvFile(inventoryReportLineList)).iterator();
+        return Collections.singletonList(writer.writeCsvFile(inventoryReportLines)).iterator();
     }
 }
